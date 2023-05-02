@@ -100,11 +100,31 @@ void compressedImgCB(const std::string& /*name*/,
     auto img = std::dynamic_pointer_cast<dai::ImgFrame>(data);
     std::deque<sensor_msgs::msg::Image> deq;
     auto info = infoManager->getCameraInfo();
+   
     converter.toRosMsgFromBitStream(img, deq, dataType, info);
     while(deq.size() > 0) {
+            auto currMsg = deq.front();
+            info.header = currMsg.header;
+            pub.publish(currMsg, info);
+            deq.pop_front();
+    }
+}
+void compressedImgCompressedCB(const std::string& /*name*/,
+                     const std::shared_ptr<dai::ADatatype>& data,
+                     dai::ros::ImageConverter& converter,
+                     rclcpp::Publisher<sensor_msgs::msg::CompressedImage> & pub,
+                     std::shared_ptr<camera_info_manager::CameraInfoManager> infoManager,
+                     dai::RawImgFrame::Type dataType,
+                     bool /*publish_info*/) {
+    auto img = std::dynamic_pointer_cast<dai::ImgFrame>(data);
+    auto info = infoManager->getCameraInfo();
+   
+    std::deque<sensor_msgs::msg::CompressedImage> deq;
+    converter.toRosMsgFromBitStreamCompressed(img, deq, dataType, info);
+    while(deq.size() > 0) {
         auto currMsg = deq.front();
-        info.header = currMsg.header;
-        pub.publish(currMsg, info);
+        // TODO: publish camera_info for 
+        pub.publish(currMsg);
         deq.pop_front();
     }
 }

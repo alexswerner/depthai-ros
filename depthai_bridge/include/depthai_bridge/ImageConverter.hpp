@@ -14,6 +14,7 @@
 #include "rclcpp/time.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "sensor_msgs/msg/image.hpp"
+#include "sensor_msgs/msg/compressed_image.hpp"
 #include "std_msgs/msg/header.hpp"
 
 namespace dai {
@@ -39,6 +40,10 @@ class ImageConverter {
     ImageConverter(bool interleaved, bool getBaseDeviceTimestamp = false);
     void toRosMsgFromBitStream(std::shared_ptr<dai::ImgFrame> inData,
                                std::deque<ImageMsgs::Image>& outImageMsgs,
+                               dai::RawImgFrame::Type type,
+                               const sensor_msgs::msg::CameraInfo& info);
+    void toRosMsgFromBitStreamCompressed(std::shared_ptr<dai::ImgFrame> inData,
+                               std::deque<ImageMsgs::CompressedImage>& outImageMsgs,
                                dai::RawImgFrame::Type type,
                                const sensor_msgs::msg::CameraInfo& info);
 

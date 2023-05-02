@@ -94,6 +94,28 @@ void ImageConverter::toRosMsgFromBitStream(std::shared_ptr<dai::ImgFrame> inData
     return;
 }
 
+void ImageConverter::toRosMsgFromBitStreamCompressed(std::shared_ptr<dai::ImgFrame> inData,
+                                           std::deque<ImageMsgs::CompressedImage>& outImageMsgs,
+                                           dai::RawImgFrame::Type type,
+                                           const sensor_msgs::msg::CameraInfo& info) {
+    std::chrono::_V2::steady_clock::time_point tstamp;
+    if(_getBaseDeviceTimestamp)
+        tstamp = inData->getTimestampDevice();
+    else
+        tstamp = inData->getTimestamp();
+    
+    StdMsgs::Header header;
+    header.frame_id = _frameName;
+    header.stamp = getFrameTime(_rosBaseTime, _steadyBaseTime, tstamp);
+    
+    sensor_msgs::msg::CompressedImage outImageMsg;
+    outImageMsg.header = header;
+    outImageMsg.format = "jpeg";
+    outImageMsg.data.resize(inData->getData().size());
+    memcpy(&outImageMsg.data[0],inData->getData().data(),inData->getData().size());
+    outImageMsgs.push_back(outImageMsg);
+}
+
 void ImageConverter::toRosMsg(std::shared_ptr<dai::ImgFrame> inData, std::deque<ImageMsgs::Image>& outImageMsgs) {
     std::chrono::_V2::steady_clock::time_point tstamp;
     if(_getBaseDeviceTimestamp)

@@ -10,6 +10,7 @@
 #include "depthai/pipeline/datatype/ADatatype.hpp"
 #include "image_transport/camera_publisher.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
+#include "sensor_msgs/msg/compressed_image.hpp"
 
 namespace dai {
 class Device;
@@ -56,6 +57,14 @@ void compressedImgCB(const std::string& /*name*/,
                      image_transport::CameraPublisher& pub,
                      std::shared_ptr<camera_info_manager::CameraInfoManager> infoManager,
                      dai::RawImgFrame::Type dataType);
+
+void compressedImgCompressedCB(const std::string& /*name*/,
+                     const std::shared_ptr<dai::ADatatype>& data,
+                     dai::ros::ImageConverter& converter,
+                     rclcpp::Publisher<sensor_msgs::msg::CompressedImage> & pub,
+                     std::shared_ptr<camera_info_manager::CameraInfoManager> infoManager,
+                     dai::RawImgFrame::Type dataType,
+                     bool publish_info);
 
 sensor_msgs::msg::CameraInfo getCalibInfo(const rclcpp::Logger& logger,
                                           dai::ros::ImageConverter& converter,
