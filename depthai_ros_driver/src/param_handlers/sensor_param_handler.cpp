@@ -20,6 +20,7 @@ void SensorParamHandler::declareCommonParams() {
     declareAndLogParam<int>("i_max_q_size", 30);
     declareAndLogParam<bool>("i_low_bandwidth", false);
     declareAndLogParam<int>("i_low_bandwidth_quality", 50);
+    declareAndLogParam<std::string>("i_low_bandwidth_codec", "mjpeg");
     declareAndLogParam<std::string>("i_calibration_file", "");
     declareAndLogParam<bool>("i_simulate_from_topic", false);
     declareAndLogParam<std::string>("i_simulated_topic_name", "");

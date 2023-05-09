@@ -110,7 +110,7 @@ void ImageConverter::toRosMsgFromBitStreamCompressed(std::shared_ptr<dai::ImgFra
     
     sensor_msgs::msg::CompressedImage outImageMsg;
     outImageMsg.header = header;
-    outImageMsg.format = "jpeg";
+    outImageMsg.format = "h264";
     outImageMsg.data.resize(inData->getData().size());
     memcpy(&outImageMsg.data[0],inData->getData().data(),inData->getData().size());
     outImageMsgs.push_back(outImageMsg);

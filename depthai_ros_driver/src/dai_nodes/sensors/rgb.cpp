@@ -45,7 +45,9 @@ void RGB::setXinXout(std::shared_ptr<dai::Pipeline> pipeline) {
         xoutColor = pipeline->create<dai::node::XLinkOut>();
         xoutColor->setStreamName(ispQName);
         if(ph->getParam<bool>("i_low_bandwidth")) {
-            videoEnc = sensor_helpers::createEncoder(pipeline, ph->getParam<int>("i_low_bandwidth_quality"));
+            videoEnc = sensor_helpers::createEncoder(pipeline, ph->getParam<int>("i_low_bandwidth_quality"), 
+                dai::VideoEncoderProperties::Profile::H264_BASELINE);
+                //dai::VideoEncoderProperties::Profile::H265_MAIN);
             colorCamNode->video.link(videoEnc->input);
             videoEnc->bitstream.link(xoutColor->input);
         } else {
