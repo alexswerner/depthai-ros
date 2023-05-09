@@ -32,6 +32,7 @@ RGB::RGB(const std::string& daiNodeName,
     ph->declareParams(colorCamNode, socket, sensor, publish);
     setXinXout(pipeline);
     RCLCPP_DEBUG(node->get_logger(), "Node %s created", daiNodeName.c_str());
+    RCLCPP_FATAL(node->get_logger(), "Start RGB node");
 }
 RGB::~RGB() = default;
 void RGB::setNames() {
@@ -62,7 +63,15 @@ void RGB::setXinXout(std::shared_ptr<dai::Pipeline> pipeline) {
         xoutPreview->setStreamName(previewQName);
         xoutPreview->input.setQueueSize(2);
         xoutPreview->input.setBlocking(false);
-        colorCamNode->preview.link(xoutPreview->input);
+        if(ph->getParam<bool>("i_low_bandwidth_preview")) {
+            videoEnc_preview = sensor_helpers::createEncoder(pipeline, ph->getParam<int>("i_low_bandwidth_preview_quality"), 
+                  dai::VideoEncoderProperties::Profile::H264_BASELINE);
+            //dai::VideoEncoderProperties::Profile::H265_MAIN);
+            colorCamNode->preview.link(videoEnc_preview->input);
+            videoEnc_preview->bitstream.link(xoutPreview->input);
+        } else {
+            colorCamNode->preview.link(xoutPreview->input);
+        }
     }
     xinControl = pipeline->create<dai::node::XLinkIn>();
     xinControl->setStreamName(controlQName);
@@ -70,6 +79,7 @@ void RGB::setXinXout(std::shared_ptr<dai::Pipeline> pipeline) {
 }
 
 void RGB::setupQueues(std::shared_ptr<dai::Device> device) {
+    RCLCPP_FATAL(getROSNode()->get_logger(), "setupQueues");
     if(ph->getParam<bool>("i_publish_topic")) {
         auto tfPrefix = getTFPrefix(getName());
         infoManager = std::make_shared<camera_info_manager::CameraInfoManager>(
@@ -98,6 +108,7 @@ void RGB::setupQueues(std::shared_ptr<dai::Device> device) {
                                           rgbPub,
                                           infoManager,
                                           dai::RawImgFrame::Type::BGR888i));
+            RCLCPP_DEBUG(getROSNode()->get_logger(), "Creating direct compressed image publisher");
             compressed_rgbPub = getROSNode()->create_publisher<sensor_msgs::msg::CompressedImage>(
                             "~/" + getName() + "/image_raw/compressed2",rclcpp::SensorDataQoS());
             // if(!ph->getParam<bool>("i_dont_uncompress")) {
@@ -133,7 +144,33 @@ void RGB::setupQueues(std::shared_ptr<dai::Device> device) {
         } else {
             infoManager->loadCameraInfo(ph->getParam<std::string>("i_calibration_file"));
         }
-        previewQ->addCallback(std::bind(sensor_helpers::imgCB, std::placeholders::_1, std::placeholders::_2, *imageConverter, previewPub, previewInfoManager));
+        if(ph->getParam<bool>("i_low_bandwidth_preview")) {
+            previewQ->addCallback(std::bind(sensor_helpers::compressedImgCB,
+                                          std::placeholders::_1,
+                                          std::placeholders::_2,
+                                          *imageConverter,
+                                          previewPub,
+                                          previewInfoManager,
+                                          dai::RawImgFrame::Type::BGR888i));
+            compressed_previewPub = getROSNode()->create_publisher<sensor_msgs::msg::CompressedImage>(
+                            "~/" + getName() + "/preview/image_raw/compressed2",rclcpp::SensorDataQoS());
+            RCLCPP_FATAL(getROSNode()->get_logger(), "Creating direct compressed image publisher for preview");
+            // if(!ph->getParam<bool>("i_dont_uncompress")) {
+            //      // TODO: create camera_info publisher
+            // }
+            //
+            previewQ->addCallback(std::bind(sensor_helpers::compressedImgCompressedCB,
+                                          std::placeholders::_1,
+                                          std::placeholders::_2,
+                                          *imageConverter,
+                                          *compressed_previewPub,
+                                          infoManager,
+                                          dai::RawImgFrame::Type::BGR888i,
+                                          !ph->getParam<bool>("i_dont_uncompress")));
+        } else {
+            RCLCPP_FATAL(getROSNode()->get_logger(), "straight preview");
+            previewQ->addCallback(std::bind(sensor_helpers::imgCB, std::placeholders::_1, std::placeholders::_2, *imageConverter, previewPub, previewInfoManager));
+        }
     };
     controlQ = device->getInputQueue(controlQName);
 }

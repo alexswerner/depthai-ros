@@ -62,10 +62,12 @@ class RGB : public BaseNode {
    private:
     std::unique_ptr<dai::ros::ImageConverter> imageConverter;
     image_transport::CameraPublisher rgbPub, previewPub;
+    rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_previewPub;
     rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_rgbPub;
     std::shared_ptr<camera_info_manager::CameraInfoManager> infoManager, previewInfoManager;
     std::shared_ptr<dai::node::ColorCamera> colorCamNode;
     std::shared_ptr<dai::node::VideoEncoder> videoEnc;
+    std::shared_ptr<dai::node::VideoEncoder> videoEnc_preview;
     std::unique_ptr<param_handlers::SensorParamHandler> ph;
     std::shared_ptr<dai::DataOutputQueue> colorQ, previewQ;
     std::shared_ptr<dai::DataInputQueue> controlQ;

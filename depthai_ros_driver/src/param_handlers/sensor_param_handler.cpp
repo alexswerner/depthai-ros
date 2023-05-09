@@ -19,6 +19,7 @@ SensorParamHandler::~SensorParamHandler() = default;
 void SensorParamHandler::declareCommonParams() {
     declareAndLogParam<int>("i_max_q_size", 30);
     declareAndLogParam<bool>("i_low_bandwidth", false);
+    declareAndLogParam<bool>("i_low_bandwidth_preview", false);
     declareAndLogParam<int>("i_low_bandwidth_quality", 50);
     declareAndLogParam<std::string>("i_low_bandwidth_codec", "mjpeg");
     declareAndLogParam<std::string>("i_calibration_file", "");
@@ -74,6 +75,8 @@ void SensorParamHandler::declareParams(std::shared_ptr<dai::node::ColorCamera> c
     declareAndLogParam<int>("i_board_socket_id", static_cast<int>(socket));
     declareAndLogParam<bool>("i_output_isp", true);
     declareAndLogParam<bool>("i_enable_preview", false);
+    declareAndLogParam<int>("i_low_bandwidth_preview_quality", 50);
+    declareAndLogParam<std::string>("i_low_bandwidth_preview_codec", "mjpeg");
     colorCam->setBoardSocket(socket);
     colorCam->setFps(declareAndLogParam<double>("i_fps", 30.0));
     size_t preview_size = declareAndLogParam<int>("i_preview_size", 300);
