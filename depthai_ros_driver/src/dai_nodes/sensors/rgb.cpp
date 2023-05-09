@@ -44,12 +44,20 @@ void RGB::setXinXout(std::shared_ptr<dai::Pipeline> pipeline) {
     if(ph->getParam<bool>("i_publish_topic")) {
         xoutColor = pipeline->create<dai::node::XLinkOut>();
         xoutColor->setStreamName(ispQName);
+        
+        xoutColor2 = pipeline->create<dai::node::XLinkOut>();
+        xoutColor2->setStreamName(ispQName+"H264");
+        
         if(ph->getParam<bool>("i_low_bandwidth")) {
             videoEnc = sensor_helpers::createEncoder(pipeline, ph->getParam<int>("i_low_bandwidth_quality"), 
-                dai::VideoEncoderProperties::Profile::H264_BASELINE);
-                //dai::VideoEncoderProperties::Profile::H265_MAIN);
+                dai::VideoEncoderProperties::Profile::MJPEG);
             colorCamNode->video.link(videoEnc->input);
             videoEnc->bitstream.link(xoutColor->input);
+            
+            videoEnc2 = sensor_helpers::createEncoder(pipeline, ph->getParam<int>("i_low_bandwidth_quality"), 
+                dai::VideoEncoderProperties::Profile::H264_BASELINE);
+            colorCamNode->video.link(videoEnc2->input);
+            videoEnc2->bitstream.link(xoutColor2->input);
         } else {
             if(ph->getParam<bool>("i_output_isp"))
                 colorCamNode->isp.link(xoutColor->input);
@@ -86,9 +94,7 @@ void RGB::setupQueues(std::shared_ptr<dai::Device> device) {
         } else {
             infoManager->loadCameraInfo(ph->getParam<std::string>("i_calibration_file"));
         }
-        if(!ph->getParam<bool>("i_dont_uncompress")) {
-                rgbPub = image_transport::create_camera_publisher(getROSNode(), "~/" + getName() + "/image_raw");
-        }
+        rgbPub = image_transport::create_camera_publisher(getROSNode(), "~/" + getName() + "/image_raw");
         colorQ = device->getOutputQueue(ispQName, ph->getParam<int>("i_max_q_size"), false);
         if(ph->getParam<bool>("i_low_bandwidth")) {
             colorQ->addCallback(std::bind(sensor_helpers::compressedImgCB,
@@ -98,13 +104,11 @@ void RGB::setupQueues(std::shared_ptr<dai::Device> device) {
                                           rgbPub,
                                           infoManager,
                                           dai::RawImgFrame::Type::BGR888i));
+
             compressed_rgbPub = getROSNode()->create_publisher<sensor_msgs::msg::CompressedImage>(
-                            "~/" + getName() + "/image_raw/compressed2",rclcpp::SensorDataQoS());
-            // if(!ph->getParam<bool>("i_dont_uncompress")) {
-            //      // TODO: create camera_info publisher
-            // }
-            //
-            colorQ->addCallback(std::bind(sensor_helpers::compressedImgCompressedCB,
+                            "~/" + getName() + "/image_raw/compressed2",rclcpp::SensorDataQoS());            
+            colorQH264 = device->getOutputQueue(ispQName+"H264", ph->getParam<int>("i_max_q_size"), false);
+            colorQH264->addCallback(std::bind(sensor_helpers::compressedImgCompressedCB,
                                           std::placeholders::_1,
                                           std::placeholders::_2,
                                           *imageConverter,

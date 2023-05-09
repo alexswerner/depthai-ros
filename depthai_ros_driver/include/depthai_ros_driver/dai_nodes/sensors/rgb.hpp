@@ -66,10 +66,11 @@ class RGB : public BaseNode {
     std::shared_ptr<camera_info_manager::CameraInfoManager> infoManager, previewInfoManager;
     std::shared_ptr<dai::node::ColorCamera> colorCamNode;
     std::shared_ptr<dai::node::VideoEncoder> videoEnc;
+    std::shared_ptr<dai::node::VideoEncoder> videoEnc2;
     std::unique_ptr<param_handlers::SensorParamHandler> ph;
-    std::shared_ptr<dai::DataOutputQueue> colorQ, previewQ;
+    std::shared_ptr<dai::DataOutputQueue> colorQ, colorQH264, previewQ;
     std::shared_ptr<dai::DataInputQueue> controlQ;
-    std::shared_ptr<dai::node::XLinkOut> xoutColor, xoutPreview;
+    std::shared_ptr<dai::node::XLinkOut> xoutColor, xoutColor2, xoutPreview;
     std::shared_ptr<dai::node::XLinkIn> xinControl;
     std::string ispQName, previewQName, controlQName;
 };
